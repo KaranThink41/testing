@@ -7,6 +7,13 @@ import {
   submitLeaveRequestTool,
 } from "../tools/employees.js";
 
+function missingConfig() {
+  return !process.env.WORKDAY_CLIENT_ID ||
+    !process.env.WORKDAY_CLIENT_SECRET ||
+    !process.env.WORKDAY_TENANT ||
+    !process.env.WORKDAY_REFRESH_TOKEN;
+}
+
 export function setupToolHandlers(server: any, workdayClient: WorkdayClient) {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
@@ -48,6 +55,12 @@ export function setupToolHandlers(server: any, workdayClient: WorkdayClient) {
 }
 
 async function handleGetEmployees(workdayClient: WorkdayClient, args: GetEmployeesArgs) {
+  if (missingConfig()) {
+    return {
+      content: [{ type: "text", text: "Workday configuration is missing. Please set WORKDAY_CLIENT_ID, WORKDAY_CLIENT_SECRET, WORKDAY_TENANT, and WORKDAY_REFRESH_TOKEN." }],
+      isError: true,
+    };
+  }
   try {
     const response = await workdayClient.getEmployees(args.offset, args.limit);
     return { content: [{ type: "text", text: JSON.stringify(response) }] };
@@ -63,6 +76,12 @@ async function handleSubmitLeaveRequest(
   workdayClient: WorkdayClient,
   args: SubmitLeaveRequestArgs
 ) {
+  if (missingConfig()) {
+    return {
+      content: [{ type: "text", text: "Workday configuration is missing. Please set WORKDAY_CLIENT_ID, WORKDAY_CLIENT_SECRET, WORKDAY_TENANT, and WORKDAY_REFRESH_TOKEN." }],
+      isError: true,
+    };
+  }
   try {
     const response = await workdayClient.submitLeaveRequest(
       args.worker_id,

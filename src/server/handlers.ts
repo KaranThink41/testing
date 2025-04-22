@@ -4,33 +4,9 @@ import { WorkdayClient } from "../services/workday-client.js";
 import { getEmployeesTool, getEligibleLeaveBalanceTool } from "../tools/employees.js";
 
 export function setupToolHandlers(server: any, workdayClient: WorkdayClient) {
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
-    const requiredVars = [
-      process.env.WORKDAY_CLIENT_ID,
-      process.env.WORKDAY_CLIENT_SECRET,
-      process.env.WORKDAY_TENANT,
-      process.env.WORKDAY_REFRESH_TOKEN
-    ];
-    const hasConfig = requiredVars.every(Boolean);
-
-    if (!hasConfig) {
-      return {
-        tools: [
-          {
-            name: "configure_workday",
-            description: "Please configure Workday credentials to enable tools.",
-            inputSchema: {
-              type: "object",
-              properties: {},
-            },
-          },
-        ],
-      };
-    }
-    return {
-      tools: [getEmployeesTool, getEligibleLeaveBalanceTool],
-    };
-  });
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: [getEmployeesTool, getEligibleLeaveBalanceTool],
+  }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
     try {
@@ -60,7 +36,20 @@ export function setupToolHandlers(server: any, workdayClient: WorkdayClient) {
   });
 }
 
+function missingConfig() {
+  return !process.env.WORKDAY_CLIENT_ID ||
+    !process.env.WORKDAY_CLIENT_SECRET ||
+    !process.env.WORKDAY_TENANT ||
+    !process.env.WORKDAY_REFRESH_TOKEN;
+}
+
 async function handleGetEmployees(workdayClient: WorkdayClient, args: GetEmployeesArgs) {
+  if (missingConfig()) {
+    return {
+      content: [{ type: "text", text: "Workday configuration is missing. Please set WORKDAY_CLIENT_ID, WORKDAY_CLIENT_SECRET, WORKDAY_TENANT, and WORKDAY_REFRESH_TOKEN." }],
+      isError: true,
+    };
+  }
   try {
     const response = await workdayClient.getEmployees(args.offset, args.limit);
     return { content: [{ type: "text", text: JSON.stringify(response) }] };
@@ -73,6 +62,12 @@ async function handleGetEmployees(workdayClient: WorkdayClient, args: GetEmploye
 }
 
 async function handleGetEligibleLeaveBalance(workdayClient: WorkdayClient, args: GetEligibleLeaveBalanceArgs) {
+  if (missingConfig()) {
+    return {
+      content: [{ type: "text", text: "Workday configuration is missing. Please set WORKDAY_CLIENT_ID, WORKDAY_CLIENT_SECRET, WORKDAY_TENANT, and WORKDAY_REFRESH_TOKEN." }],
+      isError: true,
+    };
+  }
   try {
     const response = await workdayClient.getEligibleAbsenceTypes(args.worker_id, args.limit);
     return { content: [{ type: "text", text: JSON.stringify(response) }] };

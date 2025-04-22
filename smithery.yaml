@@ -1,0 +1,50 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - workdayClientId
+      - workdayClientSecret
+      - workdayRefreshToken
+      - workdayTenant
+      - workdayAcessToken
+   
+    properties:
+      workdayClientId:
+        type: string
+        description: Client ID for your Workday application
+      workdayClientSecret:
+        type: string
+        description: Client Secret for your Workday application
+      workdayRefreshToken:
+        type: string
+        description: Refresh Token for your Workday application
+      workdayTenant:
+        type: string
+        description: Tenant ID for your Workday application
+      workdayAcessToken:
+        type: string
+        description: Access Token for your Workday API
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['build/index.js'],
+      env: {
+        WORKDAY_CLIENT_ID: config.workdayClientId,
+        WORKDAY_CLIENT_SECRET: config.workdayClientSecret,
+        WORKDAY_REFRESH_TOKEN: config.workdayRefreshToken,
+        WORKDAY_TENANT: config.workdayTenant,
+        WORKDAY_ACESSTOKEN: config.workdayAcessToken,
+      }
+    })
+  exampleConfig:
+   workdayClientId: your_workday_client_id
+   workdayClientSecret: your_workday_client_secret
+   workdayRefreshToken: your_workday_refresh_token
+   workdayTenant: your_workday_tenant
+   workdayAcessToken: your_workday_access_token

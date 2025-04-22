@@ -40,4 +40,8 @@ export interface SubmitLeaveRequestArgs {
   worker_id: string;
   days: LeaveRequestDay[];
 }
- 
+
+export interface GetEligibleLeaveBalanceArgs {
+  worker_id: string;
+  limit?: number;
+}

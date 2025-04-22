@@ -1,4 +1,4 @@
-import { WorkdayApiResponse } from "../types/workday.js";
+import { WorkdayApiResponse, LeaveRequestDay } from "../types/workday.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -61,5 +61,12 @@ export class WorkdayClient {
     if (limit) params.append('limit', limit.toString());
     if ([...params].length > 0) url += `?${params.toString()}`;
     return await this.makeApiRequest(url);
+  }
+
+  async submitLeaveRequest(worker_id: string, days: LeaveRequestDay[]): Promise<WorkdayApiResponse<any>> {
+    const tenant = process.env.WORKDAY_TENANT;
+    const url = `https://wd2-impl-services1.workday.com/ccx/api/absenceManagement/v2/${tenant}/workers/${worker_id}/requestTimeOff`;
+    const requestBody = { days };
+    return await this.makeApiRequest(url, "POST", requestBody);
   }
 }
